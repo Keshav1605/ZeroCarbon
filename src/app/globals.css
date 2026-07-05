@@ -1,26 +1,124 @@
 @import "tailwindcss";
 
+@theme {
+  --color-bg: var(--bg);
+  --color-bg-alt: var(--bg-alt);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-paper: var(--paper);
+  --color-paper-dim: var(--paper-dim);
+  --color-paper-faint: var(--paper-faint);
+  --color-verify: var(--verify);
+  --color-verify-dim: var(--verify-dim);
+  --color-pending: var(--pending);
+  --color-stamp-red: var(--stamp-red);
+  
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-sans: var(--font-plex-sans), -apple-system, sans-serif;
+
+  --animate-pulse-slow: pulse-slow 2s infinite;
+  --animate-flow-down: flowDown 1.7s linear infinite;
+  --animate-flow-right: flowRight 1.7s linear infinite;
+  --animate-flow-layers: flowLayers 5s linear infinite;
+  --animate-fade-up: fadeUp 0.5s ease forwards;
+  --animate-stamp-in: stampIn 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+  --animate-fill-bar: fillbar 3.2s linear forwards;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0c1210;
+  --bg-alt: #0a0f0d;
+  --surface: #141b18;
+  --surface-2: #1a2320;
+  --line: #28322d;
+  --line-soft: #1e2621;
+  --paper: #ecefe8;
+  --paper-dim: #9aa89f;
+  --paper-faint: #5e6b62;
+  --verify: #8fc99a;
+  --verify-dim: #5c8a68;
+  --pending: #e0a24e;
+  --stamp-red: #c76a5a;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--paper);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--verify-dim);
+  color: var(--bg);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 27px,
+    rgba(255, 255, 255, 0.014) 28px
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes flowDown {
+  0% { top: -4px; opacity: 0; }
+  8% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes flowRight {
+  0% { left: -4px; opacity: 0; }
+  8% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+@keyframes flowLayers {
+  0% { top: 0%; opacity: 0; }
+  6% { opacity: 1; }
+  94% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes stampIn {
+  from { opacity: 0; transform: scale(0.9) rotate(-3deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes fillbar {
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

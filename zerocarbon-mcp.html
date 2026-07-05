@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZeroCarbon MCP — Open your carbon ledger to any AI model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c1210;
+    --bg-alt:#0a0f0d;
+    --surface:#141b18;
+    --surface-2:#1a2320;
+    --line:#28322d;
+    --line-soft:#1e2621;
+    --paper:#ecefe8;
+    --paper-dim:#9aa89f;
+    --paper-faint:#5e6b62;
+    --verify:#8fc99a;
+    --verify-dim:#5c8a68;
+    --pending:#e0a24e;
+    --stamp-red:#c76a5a;
+    --serif:'Fraunces', Georgia, serif;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+    --sans:'IBM Plex Sans', -apple-system, sans-serif;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--paper);
+    font-family:var(--sans);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--verify-dim);color:var(--bg);}
+
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+
+  /* subtle ledger-line background texture */
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background-image:repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 27px,
+      rgba(255,255,255,0.014) 28px
+    );
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(12,18,16,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 32px;max-width:1180px;margin:0 auto;
+  }
+  .brand{
+    display:flex;align-items:center;gap:9px;
+    font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:0.2px;
+  }
+  .brand-mark{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--verify);
+    box-shadow:0 0 0 3px rgba(143,201,154,0.15);
+  }
+  .brand small{
+    font-family:var(--mono);font-size:10px;color:var(--paper-faint);
+    letter-spacing:1.5px;margin-left:6px;font-weight:400;
+  }
+  .nav-links{display:flex;gap:34px;font-size:14px;color:var(--paper-dim);}
+  .nav-links a{transition:color .2s;}
+  .nav-links a:hover{color:var(--paper);}
+  .nav-cta{
+    display:flex;gap:12px;align-items:center;
+  }
+  .btn{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:0.3px;
+    padding:9px 16px;border-radius:3px;
+    border:1px solid var(--line);
+    transition:all .2s;
+    white-space:nowrap;
+  }
+  .btn-ghost{color:var(--paper-dim);}
+  .btn-ghost:hover{color:var(--paper);border-color:var(--paper-faint);}
+  .btn-solid{
+    background:var(--verify);color:#0c1210;border-color:var(--verify);
+    font-weight:600;
+  }
+  .btn-solid:hover{background:#a3d8ac;}
+  @media (max-width:820px){ .nav-links{display:none;} }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    padding:96px 32px 80px;
+    max-width:1180px;margin:0 auto;
+    display:grid;grid-template-columns:1.1fr 0.9fr;gap:64px;align-items:center;
+  }
+  @media (max-width:960px){ .hero{grid-template-columns:1fr;padding-top:64px;} }
+
+  .eyebrow{
+    font-family:var(--mono);font-size:11.5px;letter-spacing:2px;
+    color:var(--verify);text-transform:uppercase;
+    display:flex;align-items:center;gap:9px;margin-bottom:22px;
+  }
+  .eyebrow::before{content:'';width:16px;height:1px;background:var(--verify);}
+
+  .hero h1{
+    font-family:var(--serif);font-weight:500;
+    font-size:clamp(38px,5vw,58px);
+    line-height:1.06;letter-spacing:-0.5px;
+    color:var(--paper);margin-bottom:22px;
+  }
+  .hero h1 em{font-style:italic;color:var(--verify);font-weight:500;}
+
+  .hero p.lead{
+    font-size:16.5px;color:var(--paper-dim);max-width:480px;margin-bottom:34px;
+    line-height:1.65;
+  }
+  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:40px;}
+  .hero-ctas .btn{padding:13px 22px;font-size:13px;}
+
+  .hero-note{
+    font-family:var(--mono);font-size:12px;color:var(--paper-faint);
+    display:flex;align-items:center;gap:8px;
+  }
+  .hero-note .dot{width:6px;height:6px;border-radius:50%;background:var(--verify);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+
+  /* ---------- HERO VISUAL: the ledger/audit sequence ---------- */
+  .ledger-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.5);
+  }
+  .ledger-card-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 16px;border-bottom:1px solid var(--line);
+    background:var(--surface-2);
+  }
+  .ledger-card-head span{font-family:var(--mono);font-size:10.5px;color:var(--paper-faint);letter-spacing:1px;}
+  .ledger-dots{display:flex;gap:5px;}
+  .ledger-dots i{width:7px;height:7px;border-radius:50%;background:var(--line);display:block;}
+
+  .seq{padding:22px 20px;min-height:280px;position:relative;}
+  .seq-step{
+    display:none;
+    animation:fadeUp .5s ease forwards;
+  }
+  .seq-step.active{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  .bubble{
+    font-family:var(--sans);font-size:13.5px;color:var(--paper);
+    background:var(--surface-2);border:1px solid var(--line);
+    border-radius:4px;padding:12px 14px;margin-bottom:16px;
+    position:relative;
+  }
+  .bubble::before{
+    content:'ASKED';font-family:var(--mono);font-size:9.5px;letter-spacing:1.5px;
+    color:var(--paper-faint);display:block;margin-bottom:6px;
+  }
+  .typewriter{border-right:2px solid var(--verify);white-space:nowrap;overflow:hidden;display:inline-block;}
+
+  .arrow-down{
+    text-align:center;color:var(--paper-faint);font-family:var(--mono);font-size:13px;
+    margin:10px 0;
+  }
+
+  /* ---------- n8n-style flowing connector ---------- */
+  .flow-track{
+    position:relative;width:2px;height:34px;margin:4px auto;
+    background:repeating-linear-gradient(to bottom,var(--line) 0 5px,transparent 5px 10px);
+  }
+  .flow-track::after{
+    content:'';position:absolute;left:50%;top:-4px;
+    width:7px;height:7px;border-radius:50%;
+    transform:translateX(-50%);
+    background:var(--verify);
+    box-shadow:0 0 9px 2px rgba(143,201,154,0.65);
+    animation:flowDown 1.7s linear infinite;
+  }
+  .flow-track.h{width:100%;height:2px;margin:0;
+    background:repeating-linear-gradient(to right,var(--line) 0 5px,transparent 5px 10px);
+  }
+  .flow-track.h::after{animation:flowRight 1.7s linear infinite;top:50%;left:-4px;transform:translateY(-50%);}
+  @keyframes flowDown{0%{top:-4px;opacity:0;}8%{opacity:1;}88%{opacity:1;}100%{top:100%;opacity:0;}}
+  @keyframes flowRight{0%{left:-4px;opacity:0;}8%{opacity:1;}88%{opacity:1;}100%{left:100%;opacity:0;}}
+  .flow-label{
+    text-align:center;font-family:var(--mono);font-size:11px;color:var(--paper-faint);
+    letter-spacing:0.3px;
+  }
+  .flow-track.d1::after{animation-delay:0.3s;}
+  .flow-track.d2::after{animation-delay:0.6s;}
+  .flow-track.d3::after{animation-delay:0.9s;}
+
+  /* flowing dot along the full layer timeline */
+  .layers{padding-left:0;}
+  .layer-flow{
+    position:absolute;left:23px;top:14px;width:1px;height:calc(100% - 28px);
+    pointer-events:none;
+  }
+  .layer-flow::after{
+    content:'';position:absolute;left:50%;top:0;
+    width:8px;height:8px;border-radius:50%;
+    transform:translateX(-50%);
+    background:var(--verify);
+    box-shadow:0 0 10px 3px rgba(143,201,154,0.6);
+    animation:flowLayers 5s linear infinite;
+  }
+  @keyframes flowLayers{0%{top:0%;opacity:0;}6%{opacity:1;}94%{opacity:1;}100%{top:100%;opacity:0;}}
+
+  .code-block{
+    font-family:var(--mono);font-size:12px;color:var(--verify);
+    background:#0a0f0d;border:1px solid var(--line);border-radius:4px;
+    padding:14px;line-height:1.7;white-space:pre;overflow-x:auto;
+  }
+  .code-block .k{color:var(--paper-dim);}
+
+  .ledger-row{
+    margin-top:16px;border:1px solid var(--verify-dim);border-radius:4px;
+    padding:12px 14px;background:rgba(143,201,154,0.06);
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--mono);font-size:12px;
+    animation:stampIn .45s cubic-bezier(.2,1.4,.4,1) forwards;
+  }
+  @keyframes stampIn{from{opacity:0;transform:scale(0.9) rotate(-3deg);}to{opacity:1;transform:scale(1) rotate(0);}}
+  .ledger-row .site{color:var(--paper);}
+  .ledger-row .verified{
+    color:var(--verify);border:1px solid var(--verify-dim);
+    padding:2px 7px;border-radius:2px;font-size:10px;letter-spacing:1px;
+  }
+
+  .seq-progress{display:flex;gap:5px;padding:0 20px 18px;}
+  .seq-progress i{height:2px;flex:1;background:var(--line);border-radius:2px;overflow:hidden;position:relative;}
+  .seq-progress i span{position:absolute;inset:0;background:var(--verify);transform:scaleX(0);transform-origin:left;}
+  .seq-progress i.done span{transform:scaleX(1);transition:none;}
+  .seq-progress i.active span{transform:scaleX(0);animation:fillbar 3.2s linear forwards;}
+  @keyframes fillbar{to{transform:scaleX(1);}}
+
+  /* ---------- SECTIONS shared ---------- */
+  section{padding:100px 0;position:relative;z-index:1;}
+  .section-head{max-width:640px;margin-bottom:56px;}
+  .section-head .eyebrow{margin-bottom:16px;}
+  .section-head h2{
+    font-family:var(--serif);font-weight:500;font-size:clamp(28px,3.4vw,38px);
+    line-height:1.15;color:var(--paper);letter-spacing:-0.3px;
+  }
+  .section-head p{color:var(--paper-dim);margin-top:14px;font-size:15.5px;max-width:560px;}
+
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease, transform .7s ease;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  .divider{height:1px;background:var(--line-soft);width:100%;}
+
+  /* ---------- PROTOCOL EXPLAINER ---------- */
+  .protocol{background:var(--bg-alt);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);}
+  .protocol-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+  @media (max-width:860px){.protocol-grid{grid-template-columns:1fr;}}
+  .protocol-diagram{
+    border:1px solid var(--line);border-radius:6px;background:var(--surface);
+    padding:28px;font-family:var(--mono);font-size:12.5px;
+  }
+  .pd-row{display:flex;align-items:center;gap:12px;padding:14px 0;}
+  .pd-box{
+    flex:1;border:1px solid var(--line);border-radius:4px;padding:12px 14px;
+    background:var(--surface-2);color:var(--paper-dim);
+  }
+  .pd-box b{color:var(--paper);display:block;font-family:var(--sans);font-size:13px;margin-bottom:3px;font-weight:600;}
+  .pd-arrow{color:var(--paper-faint);font-size:15px;}
+  .protocol-copy p{color:var(--paper-dim);font-size:15px;margin-bottom:18px;}
+  .protocol-copy p b{color:var(--paper);font-weight:600;}
+
+  /* ---------- CAPABILITIES ---------- */
+  .cap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:8px;overflow:hidden;}
+  @media (max-width:860px){.cap-grid{grid-template-columns:1fr;}}
+  .cap-card{background:var(--surface);padding:34px 28px;}
+  .cap-num{font-family:var(--mono);font-size:11px;color:var(--verify);letter-spacing:1.5px;margin-bottom:18px;display:block;}
+  .cap-card h3{font-family:var(--serif);font-size:20px;font-weight:500;color:var(--paper);margin-bottom:12px;letter-spacing:-0.2px;}
+  .cap-card p{color:var(--paper-dim);font-size:14px;}
+  .cap-card .ex{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:var(--paper-faint);
+    border-left:2px solid var(--line);padding-left:12px;font-style:normal;
+  }
+
+  /* ---------- COMPARISON TABLE ---------- */
+  .ledger-sheet{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface);}
+  .ls-row{display:grid;grid-template-columns:150px 1fr 1fr;border-bottom:1px solid var(--line-soft);}
+  .ls-row:last-child{border-bottom:none;}
+  .ls-row.head{background:var(--surface-2);}
+  .ls-row.head div{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--paper-faint);text-transform:uppercase;}
+  .ls-row div{padding:20px 22px;font-size:14px;color:var(--paper-dim);}
+  .ls-row .label{font-family:var(--mono);font-size:12px;color:var(--paper);font-weight:500;}
+  .ls-row .new{color:var(--paper);position:relative;}
+  .ls-row .new::before{content:'✓';color:var(--verify);margin-right:8px;font-family:var(--mono);}
+  @media (max-width:760px){
+    .ls-row{grid-template-columns:1fr;}
+    .ls-row div{padding:12px 18px;border-bottom:1px dashed var(--line-soft);}
+    .ls-row div:last-child{border-bottom:none;}
+  }
+
+  /* ---------- ARCHITECTURE ---------- */
+  .layers{position:relative;max-width:760px;}
+  .layers::before{
+    content:'';position:absolute;left:23px;top:14px;bottom:14px;width:1px;
+    background:repeating-linear-gradient(to bottom,var(--line) 0,var(--line) 4px,transparent 4px,transparent 9px);
+  }
+  .layer{display:flex;gap:24px;padding:26px 0;position:relative;}
+  .layer-num{
+    width:47px;height:47px;border-radius:50%;flex-shrink:0;
+    border:1px solid var(--verify-dim);background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:14px;color:var(--verify);
+    position:relative;z-index:1;
+  }
+  .layer-body h4{font-family:var(--sans);font-weight:600;font-size:15.5px;color:var(--paper);margin-bottom:6px;}
+  .layer-body h4 span{color:var(--paper-faint);font-family:var(--mono);font-size:11px;font-weight:400;margin-left:8px;}
+  .layer-body p{color:var(--paper-dim);font-size:14px;max-width:520px;}
+
+  /* ---------- INTEGRATIONS ---------- */
+  .tabs{display:flex;gap:2px;margin-bottom:0;border-bottom:1px solid var(--line);}
+  .tab-btn{
+    font-family:var(--mono);font-size:12.5px;color:var(--paper-faint);
+    padding:13px 20px;background:none;border:none;cursor:pointer;
+    border-bottom:2px solid transparent;transition:all .2s;letter-spacing:0.3px;
+  }
+  .tab-btn:hover{color:var(--paper-dim);}
+  .tab-btn.active{color:var(--verify);border-bottom-color:var(--verify);}
+  .tab-panel{display:none;padding-top:32px;}
+  .tab-panel.active{display:block;animation:fadeUp .4s ease;}
+  .tab-panel ol{color:var(--paper-dim);font-size:14.5px;padding-left:20px;margin-bottom:22px;}
+  .tab-panel ol li{margin-bottom:10px;line-height:1.6;}
+  .tab-panel ol li b{color:var(--paper);}
+  .code-panel{
+    font-family:var(--mono);font-size:12.5px;color:var(--verify);
+    background:#0a0f0d;border:1px solid var(--line);border-radius:6px;
+    padding:20px;line-height:1.75;white-space:pre;overflow-x:auto;
+  }
+  .code-panel .c-key{color:#e8d8a8;}
+  .code-panel .c-str{color:var(--verify);}
+  .code-panel .c-com{color:var(--paper-faint);}
+
+  /* ---------- CTA FOOTER ---------- */
+  .cta-band{
+    text-align:center;padding:110px 32px;
+    border-top:1px solid var(--line-soft);
+    background:radial-gradient(ellipse at top, rgba(143,201,154,0.05), transparent 60%);
+  }
+  .cta-band h2{font-family:var(--serif);font-weight:500;font-size:clamp(30px,4vw,44px);color:var(--paper);margin-bottom:18px;letter-spacing:-0.4px;}
+  .cta-band p{color:var(--paper-dim);margin-bottom:34px;font-size:15.5px;}
+  .cta-band .hero-ctas{justify-content:center;}
+
+  footer{border-top:1px solid var(--line-soft);padding:40px 32px;}
+  .footer-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;max-width:1180px;margin:0 auto;}
+  .footer-row .brand{font-size:15px;}
+  .footer-links{display:flex;gap:26px;font-size:13px;color:var(--paper-faint);}
+  .footer-links a:hover{color:var(--paper-dim);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="brand"><span class="brand-mark"></span>ZeroCarbon<small>MCP</small></div>
+    <div class="nav-links">
+      <a href="#protocol">Protocol</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#integrations">Integrations</a>
+      <a href="#docs">Docs</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#integrations" class="btn btn-ghost">Log in</a>
+      <a href="#integrations" class="btn btn-solid">Get API key</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div>
+    <div class="eyebrow">Model Context Protocol · Carbon Ledger</div>
+    <h1>Your carbon ledger,<br>open to <em>any</em> AI model.</h1>
+    <p class="lead">ZeroCarbon MCP connects Claude, Cursor, and every MCP-compatible model straight to your company's emissions data — so any of them can read, calculate, and verify it in plain language, live.</p>
+    <div class="hero-ctas">
+      <a href="#integrations" class="btn btn-solid">Connect Claude Desktop</a>
+      <a href="#docs" class="btn btn-ghost">Read the docs →</a>
+    </div>
+    <div class="hero-note"><span class="dot"></span>JSON-RPC 2.0 · Stdio &amp; HTTP bridge · CEA-verified emission factors</div>
+  </div>
+
+  <div class="ledger-card">
+    <div class="ledger-card-head">
+      <span>LIVE QUERY → LEDGER ENTRY</span>
+      <div class="ledger-dots"><i></i><i></i><i></i></div>
+    </div>
+    <div class="seq" id="seq">
+      <div class="seq-step" data-step="0">
+        <div class="bubble"><span class="typewriter" id="tw"></span></div>
+        <div class="flow-track d1"></div>
+        <div class="flow-label">model calls a tool</div>
+      </div>
+      <div class="seq-step" data-step="1">
+        <div class="code-block"><span class="k">{</span>
+  <span class="k">"tool"</span>: <span class="k">"query_ledger"</span>,
+  <span class="k">"params"</span>: <span class="k">{</span>
+    <span class="k">"site"</span>: <span class="k">"IN-MUM-04"</span>,
+    <span class="k">"month"</span>: <span class="k">"2026-04"</span>
+  <span class="k">}</span>
+<span class="k">}</span></div>
+        <div class="flow-track d2"></div>
+        <div class="flow-label">server resolves against ledger</div>
+      </div>
+      <div class="seq-step" data-step="2">
+        <div class="ledger-row"><span class="site">IN-MUM-04 · Electricity · 342.0 kWh</span><span class="verified">VERIFIED</span></div>
+        <div class="ledger-row" style="margin-top:10px;"><span class="site">0.281 tCO2e · CEA grid factor</span><span class="verified">VERIFIED</span></div>
+      </div>
+    </div>
+    <div class="seq-progress" id="seqProgress">
+      <i class="bar"><span></span></i><i class="bar"><span></span></i><i class="bar"><span></span></i>
+    </div>
+  </div>
+</section>
+
+<section class="protocol" id="protocol">
+  <div class="wrap">
+    <div class="protocol-grid">
+      <div class="reveal">
+        <div class="eyebrow">01 · The Standard</div>
+        <h2 style="font-family:var(--serif);font-weight:500;font-size:clamp(26px,3vw,32px);color:var(--paper);margin-bottom:20px;">A universal translator between models and your data</h2>
+        <div class="protocol-copy">
+          <p>Model Context Protocol is an open standard, started by Anthropic, for connecting AI models to external data without writing a custom integration for every provider.</p>
+          <p><b>ZeroCarbon runs the server side of it.</b> Instead of hardcoding what an AI can do with your emissions data, the server publishes a list of tools it supports — query the ledger, calculate a footprint, verify an entry — and the model picks the right one for the question it's been asked.</p>
+          <p>Every call travels over a JSON-RPC 2.0 bridge, either locally through stdio pipes or remotely over HTTP behind an API key.</p>
+        </div>
+      </div>
+      <div class="reveal protocol-diagram">
+        <div class="pd-row">
+          <div class="pd-box"><b>MCP Client</b>Claude, Cursor, or any compatible model</div>
+        </div>
+        <div class="flow-track d3"></div>
+        <div class="flow-label">JSON-RPC 2.0</div>
+        <div class="pd-row">
+          <div class="pd-box"><b>Gateway</b>Verifies your API token, routes the call</div>
+        </div>
+        <div class="flow-track d1"></div>
+        <div class="flow-label">tool call resolved</div>
+        <div class="pd-row">
+          <div class="pd-box"><b>ZeroCarbon MCP Server</b>Publishes tools, hosts calculations, holds the ledger</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="capabilities">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">02 · What It Does</div>
+      <h2>Three things it hands the model</h2>
+      <p>Once connected, a model doesn't just read your data — it can question it, calculate against it, and log new entries into it.</p>
+    </div>
+    <div class="cap-grid reveal">
+      <div class="cap-card">
+        <span class="cap-num">→ AUDIT</span>
+        <h3>Natural language ledger auditing</h3>
+        <p>Ask a question in plain English and the model turns it into the right database call, then hands back a formatted answer.</p>
+        <div class="ex">"List all Scope 3 travel entries that aren't verified yet."</div>
+      </div>
+      <div class="cap-card">
+        <span class="cap-num">→ CALCULATE</span>
+        <h3>Instant GHG Protocol calculations</h3>
+        <p>Exposes verified calculation tools for electricity, fuel combustion, air travel, waste, and logistics — using location-specific factors like India's CEA grid emission factors.</p>
+        <div class="ex">electricity_calc · combustion_calc · travel_calc · waste_calc</div>
+      </div>
+      <div class="cap-card">
+        <span class="cap-num">→ INGEST</span>
+        <h3>Automated data ingestion</h3>
+        <p>Point the model at unstructured text or a file, and it extracts the values, runs the calculation, and records the entry — all from one prompt.</p>
+        <div class="ex">"Log this diesel invoice for the Chennai site."</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="comparison" style="background:var(--bg-alt);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">03 · Before &amp; After</div>
+      <h2>What changes on the ledger</h2>
+      <p>Carbon accounting has run on spreadsheets and manual review for years. Here's what a protocol connection replaces.</p>
+    </div>
+    <div class="ledger-sheet reveal">
+      <div class="ls-row head">
+        <div>Aspect</div><div>Before</div><div>With ZeroCarbon MCP</div>
+      </div>
+      <div class="ls-row">
+        <div class="label">Data entry</div>
+        <div>Manual entry from paper invoices into spreadsheets, with a high human error rate.</div>
+        <div class="new">Invoices are emailed in, parsed by AI, and logged instantly.</div>
+      </div>
+      <div class="ls-row">
+        <div class="label">Validation</div>
+        <div>Receipts and calculations sit in separate folders; auditing happens offline, by hand.</div>
+        <div class="new">Every ledger entry links back to its source invoice for one-click audit checks.</div>
+      </div>
+      <div class="ls-row">
+        <div class="label">Integration</div>
+        <div>Developers write static API code just to parse and upload CSV files.</div>
+        <div class="new">Cursor, Windsurf, or a Python script query and write data through one bridge.</div>
+      </div>
+      <div class="ls-row">
+        <div class="label">Reporting</div>
+        <div>Reports arrive monthly or yearly, usually from an external consultant.</div>
+        <div class="new">Ask a question in chat, or let a cron job report on a schedule you set.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">04 · Architecture</div>
+      <h2>Five layers, one request</h2>
+      <p>Every call — whether it's a chat question or a scheduled scan — passes through the same five layers in order.</p>
+    </div>
+    <div class="layers reveal" style="position:relative;">
+      <div class="layer-flow"></div>
+      <div class="layer">
+        <div class="layer-num">1</div>
+        <div class="layer-body"><h4>Client<span>where the request starts</span></h4><p>Operators ask questions, write code, or trigger scheduled automation from Claude Desktop, an IDE, or a script.</p></div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">2</div>
+        <div class="layer-body"><h4>Gateway<span>where it's authenticated</span></h4><p>Translates a local pipe or remote HTTP call into a JSON-RPC message and checks the API key signature.</p></div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">3</div>
+        <div class="layer-body"><h4>MCP Core<span>where tools are offered</span></h4><p>Publishes the list of available tools and validates that incoming variables match expected categories.</p></div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">4</div>
+        <div class="layer-body"><h4>Ingestion<span>where files become numbers</span></h4><p>Monitors a shared mailbox and runs multimodal models to convert invoice images and PDFs into figures.</p></div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">5</div>
+        <div class="layer-body"><h4>Ledger<span>where it's recorded</span></h4><p>Runs the SQL transaction, attaches the source document, and keeps the carbon record's integrity intact.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="integrations" style="background:var(--bg-alt);border-top:1px solid var(--line-soft);">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">05 · Connect</div>
+      <h2>Connect in minutes, not sprints</h2>
+      <p>Three ways in, depending on who's connecting and where they're working.</p>
+    </div>
+
+    <div class="reveal">
+      <div class="tabs" id="tabs">
+        <button class="tab-btn active" data-tab="0">Claude Desktop</button>
+        <button class="tab-btn" data-tab="1">Cursor / Windsurf</button>
+        <button class="tab-btn" data-tab="2">Email pipeline</button>
+      </div>
+
+      <div class="tab-panel active" data-panel="0">
+        <ol>
+          <li><b>Open your config file.</b> Windows: <code>Win + R</code> → paste <code>%APPDATA%\Claude\claude_desktop_config.json</code>. macOS: open <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>.</li>
+          <li><b>Add your ZeroCarbon bridge.</b> Paste the block below and drop in your live API key.</li>
+          <li><b>Restart Claude Desktop.</b> A small plug icon appears in the chat input once it's connected.</li>
+        </ol>
+        <div class="code-panel"><span class="c-key">{</span>
+  <span class="c-key">"mcpServers"</span>: <span class="c-key">{</span>
+    <span class="c-key">"zerocarbon"</span>: <span class="c-key">{</span>
+      <span class="c-key">"command"</span>: <span class="c-str">"npx"</span>,
+      <span class="c-key">"args"</span>: [
+        <span class="c-str">"-y"</span>,
+        <span class="c-str">"@modelcontextprotocol/server-http-bridge"</span>,
+        <span class="c-str">"--url"</span>,
+        <span class="c-str">"https://zerocarbon.org.in/api/v1/mcp"</span>
+      ],
+      <span class="c-key">"env"</span>: <span class="c-key">{</span>
+        <span class="c-key">"ZEROCARBON_API_KEY"</span>: <span class="c-str">"YOUR_zc_live_API_KEY_HERE"</span>
+      <span class="c-key">}</span>
+    <span class="c-key">}</span>
+  <span class="c-key">}</span>
+<span class="c-key">}</span></div>
+      </div>
+
+      <div class="tab-panel" data-panel="1">
+        <ol>
+          <li>In Cursor, open <b>Settings → Features → MCP.</b></li>
+          <li>Click <b>+ Add New MCP Server.</b></li>
+          <li>Set <b>Name</b> to ZeroCarbon and <b>Type</b> to <code>command</code>, then paste the command below.</li>
+          <li>Add an env variable: key <code>ZEROCARBON_API_KEY</code>, value your live key. Save.</li>
+        </ol>
+        <div class="code-panel"><span class="c-com"># Command</span>
+npx -y @modelcontextprotocol/server-http-bridge --url \
+  https://zerocarbon.org.in/api/v1/mcp
+
+<span class="c-com"># Env</span>
+ZEROCARBON_API_KEY=zc_live_...</div>
+      </div>
+
+      <div class="tab-panel" data-panel="2">
+        <ol>
+          <li><b>Add your inbox credentials</b> to the environment so ZeroCarbon can read incoming invoices.</li>
+          <li><b>Set a cron schedule</b> on your hosting platform to scan the inbox automatically.</li>
+        </ol>
+        <div class="code-panel"><span class="c-com"># Step 1 — environment</span>
+EMAIL_USER="your-inbox-address@yourcompany.com"
+EMAIL_PASSWORD="your-secure-imap-app-password"
+EMAIL_HOST="imap.gmail.com"
+EMAIL_PORT=993
+ZEROCARBON_API_KEY="zc_live_..."
+
+<span class="c-com"># Step 2 — cron scheduler</span>
+<span class="c-key">{</span>
+  <span class="c-key">"crons"</span>: [
+    <span class="c-key">{</span>
+      <span class="c-key">"path"</span>: <span class="c-str">"/api/v1/company/automation/email-scan"</span>,
+      <span class="c-key">"schedule"</span>: <span class="c-str">"0 0 * * *"</span>
+    <span class="c-key">}</span>
+  ]
+<span class="c-key">}</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band" id="docs">
+  <div class="eyebrow" style="justify-content:center;">Ready when you are</div>
+  <h2>Give your model access<br>to the truth on your ledger.</h2>
+  <p>Free to connect for a single site. No credit card for the first ledger.</p>
+  <div class="hero-ctas">
+    <a href="#" class="btn btn-solid">Get your API key</a>
+    <a href="#" class="btn btn-ghost">View full documentation →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-row">
+    <div class="brand"><span class="brand-mark"></span>ZeroCarbon<small>MCP</small></div>
+    <div class="footer-links">
+      <a href="#protocol">Protocol</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#integrations">Integrations</a>
+      <a href="#docs">Docs</a>
+    </div>
+    <div class="footer-links"><span>© 2026 ZeroCarbon</span></div>
+  </div>
+</footer>
+
+<script>
+  // ---- Hero sequence animation ----
+  const question = "How much did Mumbai office emit in April?";
+  const twEl = document.getElementById('tw');
+  const steps = document.querySelectorAll('.seq-step');
+  const bars = document.querySelectorAll('#seqProgress .bar');
+  let current = 0;
+  let typeTimer = null;
+
+  function typeText(el, text, done){
+    el.textContent = '';
+    let i = 0;
+    clearInterval(typeTimer);
+    typeTimer = setInterval(() => {
+      el.textContent = text.slice(0, i);
+      i++;
+      if(i > text.length){ clearInterval(typeTimer); if(done) done(); }
+    }, 38);
+  }
+
+  function showStep(idx){
+    steps.forEach(s => s.classList.toggle('active', +s.dataset.step === idx));
+    bars.forEach((b, i) => {
+      b.classList.remove('active','done');
+      if(i < idx) b.classList.add('done');
+      if(i === idx) b.classList.add('active');
+    });
+    if(idx === 0){ typeText(twEl, question); }
+  }
+
+  function nextStep(){
+    current = (current + 1) % steps.length;
+    showStep(current);
+  }
+
+  showStep(0);
+  setInterval(nextStep, 3300);
+
+  // ---- Scroll reveal ----
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('in'); });
+  }, {threshold:0.15});
+  revealEls.forEach(el => io.observe(el));
+
+  // ---- Integration tabs ----
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabPanels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
