@@ -1,11 +1,13 @@
 import React from 'react';
 import { Reveal } from '../ui/Reveal';
 import { FlowTrack } from '../ui/FlowTrack';
+import { SpotlightGrid } from '../ui/SpotlightGrid';
 
 export function ProtocolExplainer() {
   return (
-    <section id="protocol" className="py-[100px] relative z-10 bg-[var(--bg-alt)] border-y border-[var(--line-soft)]">
-      <div className="max-w-[1180px] mx-auto px-8">
+    <section id="protocol" className="py-[100px] relative bg-[var(--bg-alt)] border-y border-[var(--line-soft)] ambient-glow-tl overflow-hidden">
+      <SpotlightGrid />
+      <div className="max-w-[1180px] mx-auto px-8 relative z-10">
         <div className="grid md:grid-cols-2 grid-cols-1 gap-[60px] items-start">
           <Reveal>
             <div className="font-mono text-[11.5px] tracking-[2px] text-[var(--verify)] uppercase flex items-center gap-[9px] mb-4 before:content-[''] before:w-4 before:h-[1px] before:bg-[var(--verify)]">
@@ -21,25 +23,25 @@ export function ProtocolExplainer() {
             </div>
           </Reveal>
           
-          <Reveal className="border border-[var(--line)] rounded-[6px] bg-[var(--surface)] p-7 font-mono text-[12.5px]">
+          <Reveal className="border-gradient rounded-[6px] bg-[var(--surface)] p-7 font-mono text-[12.5px] depth-shadow">
             <div className="flex items-center gap-3 py-3.5">
-              <div className="flex-1 border border-[var(--line)] rounded-[4px] px-[14px] py-3 bg-[var(--surface-2)] text-[var(--paper-dim)]">
+              <div className="flex-1 border-gradient rounded-[4px] px-[14px] py-3 bg-[var(--surface-2)] text-[var(--paper-dim)]">
                 <b className="text-[var(--paper)] block font-sans text-[13px] mb-[3px] font-semibold">MCP Client</b>
                 Claude, Cursor, or any compatible model
               </div>
             </div>
-            <FlowTrack direction="vertical" delayMs={900} />
+            <FlowTrack direction="vertical" drawOn={true} />
             <div className="text-center font-mono text-[11px] text-[var(--paper-faint)] tracking-[0.3px]">JSON-RPC 2.0</div>
             <div className="flex items-center gap-3 py-3.5">
-              <div className="flex-1 border border-[var(--line)] rounded-[4px] px-[14px] py-3 bg-[var(--surface-2)] text-[var(--paper-dim)]">
+              <div className="flex-1 border-gradient rounded-[4px] px-[14px] py-3 bg-[var(--surface-2)] text-[var(--paper-dim)]">
                 <b className="text-[var(--paper)] block font-sans text-[13px] mb-[3px] font-semibold">Gateway</b>
                 Verifies your API token, routes the call
               </div>
             </div>
-            <FlowTrack direction="vertical" delayMs={300} />
+            <FlowTrack direction="vertical" drawOn={true} />
             <div className="text-center font-mono text-[11px] text-[var(--paper-faint)] tracking-[0.3px]">tool call resolved</div>
             <div className="flex items-center gap-3 py-3.5">
-              <div className="flex-1 border border-[var(--line)] rounded-[4px] px-[14px] py-3 bg-[var(--surface-2)] text-[var(--paper-dim)]">
+              <div className="flex-1 border-gradient rounded-[4px] px-[14px] py-3 bg-[var(--surface-2)] text-[var(--paper-dim)]">
                 <b className="text-[var(--paper)] block font-sans text-[13px] mb-[3px] font-semibold">ZeroCarbon MCP Server</b>
                 Publishes tools, hosts calculations, holds the ledger
               </div>

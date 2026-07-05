@@ -1,6 +1,9 @@
 import React from 'react';
 import { Reveal } from '../ui/Reveal';
 import { Tabs } from '../ui/Tabs';
+import { AnimatedCounter } from '../ui/AnimatedCounter';
+import { CodeReveal } from '../ui/CodeReveal';
+import { SpotlightGrid } from '../ui/SpotlightGrid';
 import { integrationTabs } from '@/lib/content';
 
 export function Integrations() {
@@ -14,20 +17,20 @@ export function Integrations() {
             <li key={i} className="mb-2.5 leading-[1.6]" dangerouslySetInnerHTML={{ __html: step }} />
           ))}
         </ol>
-        <div className="font-mono text-[12.5px] text-[var(--verify)] bg-[#0a0f0d] border border-[var(--line)] rounded-[6px] p-5 leading-[1.75] whitespace-pre overflow-x-auto">
-          {tab.code}
-        </div>
+        <CodeReveal code={tab.code} />
       </div>
     )
   }));
 
   return (
-    <section id="integrations" className="py-[100px] relative z-10 bg-[var(--bg-alt)] border-t border-[var(--line-soft)]">
-      <div className="max-w-[1180px] mx-auto px-8">
+    <section id="integrations" className="py-[100px] relative z-10 bg-[var(--bg-alt)] border-t border-[var(--line-soft)] ambient-glow-tl">
+      <SpotlightGrid />
+      <div className="max-w-[1180px] mx-auto px-8 relative z-10">
         <Reveal className="max-w-[640px] mb-14">
-          <div className="font-mono text-[11.5px] tracking-[2px] text-[var(--verify)] uppercase flex items-center gap-[9px] mb-4 before:content-[''] before:w-4 before:h-[1px] before:bg-[var(--verify)]">
+          <div className="font-mono text-[11.5px] tracking-[2px] text-[var(--verify)] uppercase flex items-center gap-[9px] mb-2 before:content-[''] before:w-4 before:h-[1px] before:bg-[var(--verify)]">
             05 · Connect
           </div>
+          <AnimatedCounter to={3} label="ways to connect" padZero />
           <h2 className="font-serif font-medium text-[clamp(28px,3.4vw,38px)] leading-[1.15] tracking-[-0.3px] text-[var(--paper)]">
             Connect in minutes, not sprints
           </h2>

@@ -7,13 +7,15 @@ import { ComparisonTable } from '@/components/sections/ComparisonTable';
 import { Architecture } from '@/components/sections/Architecture';
 import { Integrations } from '@/components/sections/Integrations';
 import { CtaBand } from '@/components/sections/CtaBand';
+import { LedgerMarquee } from '@/components/sections/LedgerMarquee';
 
 export default function Home() {
   return (
-    <>
+    <div className="min-h-screen">
       <Header />
       <main>
         <Hero />
+        <LedgerMarquee />
         <ProtocolExplainer />
         <Capabilities />
         <ComparisonTable />
@@ -22,6 +24,6 @@ export default function Home() {
         <CtaBand />
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
